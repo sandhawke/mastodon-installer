@@ -32,15 +32,16 @@ apt-get install -y redis-server redis-tools || exit 1
 service redis-server start || exit 1
 
 apt-get install -y postgresql postgresql-contrib || exit 1
-postgresql-setup initdb || exit 1
+# not sure what this is and why it's missing:
+# postgresql-setup initdb || exit 1
 systemctl start postgresql || exit 1
 systemctl enable postgresql || exit 1
-sudo -u postgres psql -c "CREATE USER mastodon CREATEDB;" || exit 1
+(cd ~postgres && sudo -u postgres psql -c "CREATE USER mastodon CREATEDB;" || exit 1)
 
 adduser --disabled-password --gecos Mastodon mastodon || exit 1
 sudo -u mastodon sh ./as_user.sh || exit 1
 
-cp mastodon-*.service /etc/systemd/system  || exit 1
+cp -v mastodon-*.service /etc/systemd/system  || exit 1
 systemctl enable /etc/systemd/system/mastodon-*.service || exit 1
 systemctl start mastodon-web.service mastodon-sidekiq.service mastodon-streaming.service || exit 1
 
