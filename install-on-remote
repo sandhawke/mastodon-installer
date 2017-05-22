@@ -1,0 +1,12 @@
+#/bin/sh
+
+HOST=$1
+
+if [ ! -f admin_email.txt ]; then
+   echo 'you must put your email address for letsencrypt in file: admin_email.txt'
+   exit 1
+fi
+
+scp -o StrictHostKeyChecking=no * root@$HOST:
+script -c "time ssh -t root@$HOST sh install.sh" log.$HOST.`date +%Y-%m-%d-%H%M%S`
+

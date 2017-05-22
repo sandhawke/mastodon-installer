@@ -10,14 +10,21 @@ if [ "$OSVER" != "$SUP_OSVER" ]; then
     # exit 1
 fi
 
-DOMAIN=`cat /etc/hostname`
-
 echo "deb http://ftp.debian.org/debian/ jessie-backports main" \
      >> /etc/apt/sources.list.d/backports.list || exit 1
 apt-get update || exit 1
 
 time apt-get install -y -t jessie-backports letsencrypt || exit 1
-time /usr/bin/letsencrypt certonly --email `cat /root/admin_email.txt` --agree-tos --standalone -d $DOMAIN || exit 1
+DOMAIN=`cat /etc/hostname`
+if [ ! -e /etc/letsencrypt/live/$DOMAIN/privkey.pem ]; then
+    echo NO PRIVATE KEY
+    time /usr/bin/letsencrypt certonly --email `cat /root/admin_email.txt` --agree-tos --standalone -d $DOMAIN || exit 1
+else
+    echo Already have private key
+fi
+
+# needed for our nginx config
+openssl dhparam -dsaparam -out /etc/ssl/certs/dhparam.pem 4096
 
 # these are the ones from backports
 # (and we dont get nginx until letsencrypt is done)
@@ -46,13 +53,15 @@ systemctl enable postgresql || exit 1
 # let this fail, so we can repeat; if it really didn't work, the next
 # one will fail
 adduser --disabled-password --gecos Mastodon mastodon
-
-sudo -u mastodon sh ./as_user.sh || exit 1
+cp as_user.sh ~mastodon
+sudo -u mastodon sh ~mastodon/as_user.sh || exit 1
 
 cp -v mastodon-*.service /etc/systemd/system  || exit 1
 systemctl enable /etc/systemd/system/mastodon-*.service || exit 1
 systemctl start mastodon-web.service mastodon-sidekiq.service mastodon-streaming.service || exit 1
 
 sed s/example.com/$DOMAIN/ < nginx-config > /etc/nginx/sites-available/$DOMAIN || exit 1
-ln -s /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/$DOMAIN || exit 1
-service nginx start || exit 1
+ln -s /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/$DOMAIN # fail ok
+service nginx restart || exit 1
+
+echo $DOMAIN installation complete

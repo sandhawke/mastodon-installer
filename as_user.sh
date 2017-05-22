@@ -4,14 +4,17 @@
 
 cd
 
+rm -rf ~/.rbenv
 time git clone https://github.com/rbenv/rbenv.git ~/.rbenv || exit 1
 echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
 echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
 . ~/.bash_profile || exit 1
 
+rm -rf ~/.rbenv/plugins/ruby-build
 time git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build || exit 1
 time rbenv install 2.4.1 || exit 1
 
+mv live old.live.`date +%Y-%m-%d-%H%M%S`
 git clone https://github.com/tootsuite/mastodon.git live
 cd live
 # git checkout $(git tag | tail -n 1)
@@ -59,3 +62,4 @@ RAILS_ENV=production time bundle exec rails assets:precompile
 
 echo '0 0 * * * RAILS_ENV=production cd /home/mastodon/live && /home/mastodon/.rbenv/shims/bundle exec rake mastodon:daily > /dev/null' | crontab && crontab -l
 
+echo as_user.sh complete
