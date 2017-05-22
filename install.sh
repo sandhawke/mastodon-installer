@@ -10,20 +10,25 @@ if [ "$OSVER" != "$SUP_OSVER" ]; then
     # exit 1
 fi
 
-ADMIN_EMAIL=sandro@hawke.org 
 DOMAIN=`cat /etc/hostname`
 
 echo "deb http://ftp.debian.org/debian/ jessie-backports main" \
      >> /etc/apt/sources.list.d/backports.list || exit 1
 apt-get update || exit 1
-time apt-get install -y -t jessie-backports ffmpeg libssl-dev || exit 1
 
-# time apt-get install -y -t jessie-backports letsencrypt || exit 1
-# time /usr/bin/letsencrypt certonly --email $ADMIN_EMAIL --agree-tos --standalone -d $DOMAIN || exit 1
+time apt-get install -y -t jessie-backports letsencrypt || exit 1
+time /usr/bin/letsencrypt certonly --email $ADMIN_EMAIL --agree-tos --standalone -d $DOMAIN || exit 1
 
-time apt-get install -y -t jessie-backports nginx || exit 1
+# these are the ones from backports
+# (and we dont get nginx until letsencrypt is done)
+time apt-get install -y -t jessie-backports nginx ffmpeg libssl-dev || exit 1
 
+# these are from the tootsuite instructions
 time apt-get install -y imagemagick libpq-dev libxml2-dev libxslt1-dev file git curl g++ libprotobuf-dev protobuf-compiler || exit 1
+
+# this are from wogan, at least some are needed in the ruby install
+time apt-get install -y autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm3 libgdbm-dev git-core
+
 curl -sL https://deb.nodesource.com/setup_6.x | bash - || exit 1
 time apt-get install -y nodejs || exit 1
 time npm install -g yarn || exit 1
