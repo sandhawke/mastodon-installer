@@ -43,7 +43,10 @@ systemctl start postgresql || exit 1
 systemctl enable postgresql || exit 1
 (cd ~postgres && sudo -u postgres psql -c "CREATE USER mastodon CREATEDB;" || exit 1)
 
-adduser --disabled-password --gecos Mastodon mastodon || exit 1
+# let this fail, so we can repeat; if it really didn't work, the next
+# one will fail
+adduser --disabled-password --gecos Mastodon mastodon
+
 sudo -u mastodon sh ./as_user.sh || exit 1
 
 cp -v mastodon-*.service /etc/systemd/system  || exit 1
