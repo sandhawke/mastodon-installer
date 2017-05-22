@@ -17,7 +17,7 @@ echo "deb http://ftp.debian.org/debian/ jessie-backports main" \
 apt-get update || exit 1
 
 time apt-get install -y -t jessie-backports letsencrypt || exit 1
-time /usr/bin/letsencrypt certonly --email `cat admin_email.txt` --agree-tos --standalone -d $DOMAIN || exit 1
+time /usr/bin/letsencrypt certonly --email `cat /root/admin_email.txt` --agree-tos --standalone -d $DOMAIN || exit 1
 
 # these are the ones from backports
 # (and we dont get nginx until letsencrypt is done)
