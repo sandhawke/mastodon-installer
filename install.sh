@@ -23,14 +23,15 @@ time apt-get install -y -t jessie-backports ffmpeg libssl-dev || exit 1
 
 time apt-get install -y -t jessie-backports nginx || exit 1
 
-time apt-get install imagemagick libpq-dev libxml2-dev libxslt1-dev file git curl g++ libprotobuf-dev protobuf-compiler || exit 1
+time apt-get install -y imagemagick libpq-dev libxml2-dev libxslt1-dev file git curl g++ libprotobuf-dev protobuf-compiler || exit 1
 curl -sL https://deb.nodesource.com/setup_6.x | bash - || exit 1
-time apt-get install nodejs || exit 1
+time apt-get install -y nodejs || exit 1
 time npm install -g yarn || exit 1
 
-apt-get install redis-server redis-tools || exit 1
+apt-get install -y redis-server redis-tools || exit 1
+service redis-server start || exit 1
 
-apt-get install postgresql postgresql-contrib || exit 1
+apt-get install -y postgresql postgresql-contrib || exit 1
 postgresql-setup initdb || exit 1
 systemctl start postgresql || exit 1
 systemctl enable postgresql || exit 1
