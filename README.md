@@ -1,2 +1,3 @@
-# mastodon-installer
-shell script to install mastodon
+# DO NOT USE IN PRODUCTION
+
+Really not tested.
