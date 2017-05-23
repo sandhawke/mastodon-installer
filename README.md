@@ -47,3 +47,8 @@ remote machine.
   version that also allocates the server (or server cluster), and
   maybe the domain name.
 
+* make the local part be node.js, so it's an 'npm install' instead of
+  'git clone'
+
+* come up with a more clever name like mastodon-master or
+  mastodon-herder
