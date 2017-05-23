@@ -7,6 +7,11 @@ if [ ! -f admin_email.txt ]; then
    exit 1
 fi
 
-scp -o StrictHostKeyChecking=no * root@$HOST:
-script -c "time ssh -t root@$HOST sh install.sh" log.$HOST.`date +%Y-%m-%d-%H%M%S`
+# also consider smtp_password.txt
+# also consider mastodon_version.txt
+
+scp -o StrictHostKeyChecking=no *.txt *.sh *.service *config root@$HOST:
+# script -c "time ssh -t root@$HOST sh as_root.sh" log.$HOST.`date +%Y-%m-%d-%H%M%S`
+
+time ssh -t root@$HOST sh as_root.sh | tee log.$HOST.`date +%Y-%m-%d-%H%M%S`
 

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set +x
+
 # Consider looking at https://www.npmjs.com/install.sh for how to make
 # this script robust.  For now, restrict this to the tested OS.
 
@@ -36,6 +38,9 @@ time apt-get install -y imagemagick libpq-dev libxml2-dev libxslt1-dev file git 
 # this are from wogan, at least some are needed in the ruby install
 time apt-get install -y autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm3 libgdbm-dev git-core
 
+# special one from https://github.com/tootsuite/mastodon/pull/2949
+time apt-get install -y pkg-config
+
 curl -sL https://deb.nodesource.com/setup_6.x | bash - || exit 1
 time apt-get install -y nodejs || exit 1
 time npm install -g yarn || exit 1
@@ -53,7 +58,7 @@ systemctl enable postgresql || exit 1
 # let this fail, so we can repeat; if it really didn't work, the next
 # one will fail
 adduser --disabled-password --gecos Mastodon mastodon
-cp as_user.sh ~mastodon
+cp as_user.sh *.txt ~mastodon
 sudo -u mastodon sh ~mastodon/as_user.sh || exit 1
 
 cp -v mastodon-*.service /etc/systemd/system  || exit 1

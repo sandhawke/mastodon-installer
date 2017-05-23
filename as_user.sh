@@ -1,32 +1,44 @@
 #!/bin/sh
 
-# SMTPPASSWORD=`cat /root/.mastodon_smtp_password` || exit 1
-
+set -x
 cd
 
-rm -rf ~/.rbenv
-time git clone https://github.com/rbenv/rbenv.git ~/.rbenv || exit 1
-echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
-echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
-. ~/.bash_profile || exit 1
-
-rm -rf ~/.rbenv/plugins/ruby-build
-time git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build || exit 1
-time rbenv install 2.4.1 || exit 1
+if [ -e $HOME/.rbenv/shims/ruby ]; then
+    RUBYVER=`RBENV_VERSION=2.4.1 ruby -v`
+fi
+if [ -z "$RUBYVER" ]; then
+    echo correct version of ruby: not found
+    rm -rf ~/.rbenv
+    time git clone https://github.com/rbenv/rbenv.git ~/.rbenv || exit 1
+    echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+    echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
+    . ~/.bash_profile || exit 1
+    
+    rm -rf ~/.rbenv/plugins/ruby-build
+    time git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build || exit 1
+    time rbenv install 2.4.1 || exit 1
+else
+    echo ruby is good: $RUBYVER
+    . ~/.bash_profile || exit 1
+fi
 
 mv live old.live.`date +%Y-%m-%d-%H%M%S`
 git clone https://github.com/tootsuite/mastodon.git live
 cd live
-# git checkout $(git tag | tail -n 1)
-git checkout v1.3.3
+
+VERSION=`cat ~/mastodon_version.txt`
+if [ -z "$VERSION" ]; then
+    VERSION=`git tag | tail -n 1`
+fi
+git checkout $VERSION || exit 1 
 #  you are in detached head
 
-time gem install bundler
+time gem install bundler || exit 1
 #  18s titanic
 #  11s mega
 #  19s box94
 
-time bundle install --deployment --without development test
+time bundle install --deployment --without development test || exit 1
 #  8m on titanic + error!
 #  10m box94 10m and: Failed to locate protobuf
 #  6:14 on mega 
@@ -34,7 +46,7 @@ time bundle install --deployment --without development test
 #  mega  5m55 1.3
 #  b94  9m23 1.3
 
-time yarn install
+time yarn install || exit 1
 # 3m
 
 DOMAIN=`cat /etc/hostname`
@@ -51,14 +63,18 @@ sed -i s/^DEFAULT_LOCALE=.*/DEFAULT_LOCALE=en/ .env.production
 
 sed -i s/^SMTP_LOGIN=.*/SMTP_LOGIN=notifications@$DOMAIN/ .env.production
 
-#sed -i s/^SMTP_FROM_ADDRESS=.*/SMTP_FROM_ADDRESS=notifications@$DOMAIN/ .env.production
-#sed -i s/^SMTP_PASSWORD=.*/SMTP_PASSWORD=$SMTPPASSWORD/ .env.production
+# from https://app.mailgun.com/app/domains/$DOMAIN/credentials
+# for notifications acct.   COULD use a different domain, maybe.
+SMTPPASSWORD=`cat ~/smtp_password.txt`
+if [ ! -z "$SMTPPASSWORD" ]; then
+    sed -i s/^SMTP_FROM_ADDRESS=.*/SMTP_FROM_ADDRESS=notifications@$DOMAIN/ .env.production
+    sed -i s/^SMTP_PASSWORD=.*/SMTP_PASSWORD=$SMTPPASSWORD/ .env.production
+fi
 
-# add #SMTPPASSWORD
-#firefox https://app.mailgun.com/app/domains/$DOMAIN/credentials
 
-RAILS_ENV=production time bundle exec rails db:setup
-RAILS_ENV=production time bundle exec rails assets:precompile
+
+RAILS_ENV=production time bundle exec rails db:setup || exit 1
+RAILS_ENV=production time bundle exec rails assets:precompile || exit 1
 
 echo '0 0 * * * RAILS_ENV=production cd /home/mastodon/live && /home/mastodon/.rbenv/shims/bundle exec rake mastodon:daily > /dev/null' | crontab && crontab -l
 
