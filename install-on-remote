@@ -2,6 +2,12 @@
 
 HOST=$1
 
+# at least while I keep wiping hosts...
+IP=$(dig +short $HOST)
+ssh-keygen -f ~/.ssh/known_hosts -R $HOST
+ssh-keygen -f ~/.ssh/known_hosts -R $IP
+
+
 if [ ! -f admin_email.txt ]; then
    echo 'you must put your email address for letsencrypt in file: admin_email.txt'
    exit 1
@@ -13,5 +19,6 @@ fi
 scp -o StrictHostKeyChecking=no *.txt *.sh *.service *config root@$HOST:
 # script -c "time ssh -t root@$HOST sh as_root.sh" log.$HOST.`date +%Y-%m-%d-%H%M%S`
 
-time ssh -t root@$HOST sh as_root.sh | tee log.$HOST.`date +%Y-%m-%d-%H%M%S`
+mkdir -p logs
+time ssh -t root@$HOST sh as_root.sh | tee logs/log.$HOST.`date +%Y-%m-%d-%H%M%S`
 

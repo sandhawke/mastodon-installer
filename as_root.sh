@@ -25,8 +25,8 @@ else
     echo Already have private key
 fi
 
-# needed for our nginx config
-openssl dhparam -dsaparam -out /etc/ssl/certs/dhparam.pem 4096
+# WAS needed for our nginx config
+# openssl dhparam -dsaparam -out /etc/ssl/certs/dhparam.pem 4096
 
 # these are the ones from backports
 # (and we dont get nginx until letsencrypt is done)
@@ -61,12 +61,14 @@ adduser --disabled-password --gecos Mastodon mastodon
 cp as_user.sh *.txt ~mastodon
 sudo -u mastodon sh ~mastodon/as_user.sh || exit 1
 
+DOMAIN=`cat /etc/hostname`
 cp -v mastodon-*.service /etc/systemd/system  || exit 1
 systemctl enable /etc/systemd/system/mastodon-*.service || exit 1
 systemctl start mastodon-web.service mastodon-sidekiq.service mastodon-streaming.service || exit 1
 
 sed s/example.com/$DOMAIN/ < nginx-config > /etc/nginx/sites-available/$DOMAIN || exit 1
 ln -s /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/$DOMAIN # fail ok
+nginx -t
 service nginx restart || exit 1
 
 echo $DOMAIN installation complete
